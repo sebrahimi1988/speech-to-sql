@@ -36,4 +36,13 @@ with mlflow.start_run() as run:
 
 # COMMAND ----------
 
+# Register model in MLflow Model Registry
+model_name = "whisper"
+result = mlflow.register_model(
+    "runs:/"+run.info.run_id+"/model",
+    model_name
+)
+
+# COMMAND ----------
+
 
