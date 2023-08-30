@@ -1,0 +1,6 @@
+Flask==2.3.2
+azure-storage-blob
+python-dotenv
+sqlalchemy
+databricks-sql-connector
+git+https://github.com/sebrahimi1988/databricks-model-serving
