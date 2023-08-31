@@ -11,10 +11,15 @@ generator("https://huggingface.co/datasets/Narsil/asr_dummy/resolve/main/mlk.fla
 
 # DBTITLE 1,Simple Test
 from models.whisper import WhisperModel
+from datasets import load_dataset, Audio
 
 model = WhisperModel()
 
-payload = {"audio_url": ["https://huggingface.co/datasets/Narsil/asr_dummy/resolve/main/mlk.flac"]}
+dataset = load_dataset("PolyAI/minds14", "en-US", split="train")
+dataset = dataset.cast_column("audio", Audio(sampling_rate=16000))
+audio = dataset[0]["audio"]["array"]
+
+payload = {"audio": audio}
 context = None
 model.load_context(context)
 model.predict(context = context, model_input = payload)

@@ -19,7 +19,7 @@ class WhisperModel(mlflow.pyfunc.PythonModel):
 
     def predict(self, context, model_input):
 
-        transcription = self._pipeline(str(model_input["audio_url"][0])),
+        transcription = self._pipeline(model_input["audio"]),
 
         return transcription
 

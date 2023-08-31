@@ -1,0 +1,9 @@
+accelerate==0.20.3
+databricks-sql-connector
+einops
+flash_attn==1.0.5
+git+https://github.com/sebrahimi1988/databricks-model-serving
+ninja
+torch==2.0.1
+transformers==4.30.2
+triton
