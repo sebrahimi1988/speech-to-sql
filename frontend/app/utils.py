@@ -46,7 +46,7 @@ def query_endpoint(audio_url: str) -> str:
 
     client = EndpointClient(DATABRICKS_URL, DATABRICKS_TOKEN)
     output = client.query_inference_endpoint(
-        endpoint_name="whisper_sepideh", data=payload
+        endpoint_name="whisper", data=payload
     )
 
     return output["predictions"][0]
