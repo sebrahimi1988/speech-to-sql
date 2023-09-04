@@ -1,11 +1,12 @@
 import os
 import logging
 
-from azure.storage.blob import BlobClient, BlobServiceClient
 from databricks.model_serving.client import EndpointClient
 
 from databricks import sql
 
+import json
+import requests
 from dotenv import load_dotenv
 
 
@@ -13,43 +14,30 @@ load_dotenv()
 
 logging.basicConfig(level="DEBUG")
 
-SAS_TOKEN = os.environ["BLOB_CONN_STR"]
-ACCOUNT_URL = os.environ["ACCOUNT_URL"]
 DATABRICKS_URL = os.environ["DATABRICKS_URL"]
 DATABRICKS_TOKEN = os.environ["DATABRICKS_TOKEN"]
 DATABRICKS_SQL_URL = os.environ["DATABRICKS_SQL_URL"]
 DATABRICKS_SQL_HTTP_PATH = os.environ["DATABRICKS_SQL_HTTP_PATH"]
 DATABRICKS_SQL_TOKEN = os.environ["DATABRICKS_SQL_TOKEN"]
 
-client = BlobServiceClient(account_url=ACCOUNT_URL, credential=SAS_TOKEN)
 
-
-def upload_blob_data(
-    file_path: str,
-    container_name: str,
-    blob_service_client: BlobServiceClient = client,
+def query_transcription_endpoint(
+    dataset, url=DATABRICKS_URL, databricks_token=DATABRICKS_TOKEN
 ):
-    file_name = file_path.split("/")[-1]
+    url = f"{url}/serving-endpoints/whisper-sepideh/invocations"
+    headers = {
+        "Authorization": f"Bearer {databricks_token}",
+        "Content-Type": "application/json",
+    }
+    ds_dict = {"dataframe_split": dataset.to_dict(orient="split")}
+    data_json = json.dumps(ds_dict, allow_nan=True)
+    response = requests.request(method="POST", headers=headers, url=url, data=data_json)
+    if response.status_code != 200:
+        raise Exception(
+            f"Request failed with status {response.status_code}, {response.text}"
+        )
 
-    blob_client = blob_service_client.get_blob_client(container="audio", blob=file_name)
-
-    with open(file_path, "rb") as data:
-        result = blob_client.upload_blob(data, blob_type="BlockBlob")
-        logging.info(result)
-
-    url = f"{ACCOUNT_URL}/audio/{file_name}"
-    return url
-
-
-def query_endpoint(audio_url: str) -> str:
-    payload = {"inputs": {"audio_url": [audio_url]}}
-
-    client = EndpointClient(DATABRICKS_URL, DATABRICKS_TOKEN)
-    output = client.query_inference_endpoint(
-        endpoint_name="whisper", data=payload
-    )
-
-    return output["predictions"][0]
+    return response.json()["predictions"][0]
 
 
 def query_llm_endpoint(question: str) -> str:
@@ -102,7 +90,6 @@ def query_llm_endpoint(question: str) -> str:
         ).split("SELECT")[1]
     )
     return sql_query
-
 
 
 def send_query_to_warehouse(query: str) -> str:

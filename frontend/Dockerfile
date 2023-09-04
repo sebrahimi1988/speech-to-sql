@@ -1,6 +1,6 @@
 FROM python:3.10.12-slim-buster
 
-RUN apt update -y && apt install git -y
+RUN apt update -y && apt install git ffmpeg -y 
 
 RUN mkdir /app && mkdir /files && mkdir /app/files
 

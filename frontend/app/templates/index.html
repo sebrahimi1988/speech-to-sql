@@ -17,7 +17,7 @@
       <div class="w3-content" style="max-width:1400px">
          <!-- Header -->
          <header class="w3-container w3-center w3-padding-32">
-            <h1><b>Audio to SQL Translation with LLMs</b></h1>
+            <h1><b>Speech to SQL Translation with LLMs</b></h1>
             <p>Ask me anything about <span class="w3-tag">bookings and flights</span></p>
             <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Databricks_Logo.png/800px-Databricks_Logo.png" alt="Image" class="w3-center w3-margin-right" style="width:100px"> 
         </header>
@@ -87,11 +87,11 @@
           .then(stream => { handlerFunction(stream) });
       
       function handlerFunction(stream) {
-          rec = new MediaRecorder(stream);
+          rec = new MediaRecorder(stream, {mimeType: "audio/webm"});
           rec.ondataavailable = e => {
               audioChunks.push(e.data);
               if (rec.state == "inactive") {
-                  let blob = new Blob(audioChunks, {type: 'audio/mpeg-3'});
+                  let blob = new Blob(audioChunks, {type: rec.mimeType});
                   sendData(blob);
               }
           }
@@ -99,8 +99,8 @@
       
       function sendData(data) {
           var form = new FormData();
-          form.append('file', data, 'data.mp3');
-          form.append('title', 'data.mp3');
+          form.append('file', data);
+        //   form.append('title', 'data.mp3');
           //Chrome inspector shows that the post data includes a file and a title.
           $.ajax({
               type: 'POST',
