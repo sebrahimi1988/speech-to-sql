@@ -13,9 +13,9 @@ from datasets import load_dataset
 
 # COMMAND ----------
 
-# Download the Dolly model snapshot from huggingface
+# Download the Whisper model snapshot from huggingface
 from huggingface_hub import snapshot_download
-snapshot_location = snapshot_download(repo_id="openai/whisper-small", ignore_patterns=["*.msgpack", "*.h5"])
+snapshot_location = snapshot_download(repo_id="openai/whisper-large-v2", ignore_patterns=["*.msgpack", "*.h5"])
 
 # COMMAND ----------
 
