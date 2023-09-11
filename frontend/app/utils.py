@@ -1,9 +1,8 @@
 import os
 import logging
 
-from databricks.model_serving.client import EndpointClient
-
 from databricks import sql
+import pandas as pd
 
 import json
 import requests
@@ -14,17 +13,17 @@ load_dotenv()
 
 logging.basicConfig(level="DEBUG")
 
-DATABRICKS_URL = os.environ["DATABRICKS_URL"]
-DATABRICKS_TOKEN = os.environ["DATABRICKS_TOKEN"]
+DATABRICKS_EP_URL = os.environ["DATABRICKS_EP_URL"]
+DATABRICKS_EP_TOKEN = os.environ["DATABRICKS_EP_TOKEN"]
 DATABRICKS_SQL_URL = os.environ["DATABRICKS_SQL_URL"]
 DATABRICKS_SQL_HTTP_PATH = os.environ["DATABRICKS_SQL_HTTP_PATH"]
 DATABRICKS_SQL_TOKEN = os.environ["DATABRICKS_SQL_TOKEN"]
 
 
-def query_transcription_endpoint(
-    dataset, url=DATABRICKS_URL, databricks_token=DATABRICKS_TOKEN
+def query_endpoint(
+    dataset, ep_name="whisper-sepideh",url=DATABRICKS_EP_URL, databricks_token=DATABRICKS_EP_TOKEN
 ):
-    url = f"{url}/serving-endpoints/whisper-sepideh/invocations"
+    url = f"{url}/serving-endpoints/{ep_name}/invocations"
     headers = {
         "Authorization": f"Bearer {databricks_token}",
         "Content-Type": "application/json",
@@ -38,58 +37,6 @@ def query_transcription_endpoint(
         )
 
     return response.json()["predictions"][0]
-
-
-def query_llm_endpoint(question: str) -> str:
-    """
-    Helper method to wrap questions in a prompt and send them to the LLM to be translated to SQL.
-    """
-    data_details_instruction = """
-    Table name: databricks_llm_pov.trading.bookings_with_flights
-
-    Table description:
-
-    - flight_id (string) 
-    - booking_id (string) 
-    - booking_date (date): The date when the booking was made.
-    - load_factor (float)
-    - number_of_passengers (int)
-    - days_prior_to_departure (int)
-    - departure_datetime (timestamp): The date and time when the flight is scheduled to depart.
-    - arrival_datetime (timestamp): The date and time when the flight is scheduled to arrive.
-    - aircraft_capacity (int) 
-    - total_ticket_available (int)
-    - tickets_sold (int)
-    - flight_route (string)
-  """
-
-    prompt = f"""
-    You are a SQL expert. Given this table information:
-    '{data_details_instruction}'
-
-    Write a SQL query to answer the following question: '{question}'.
-
-    Return the resulting SQL query, without including any kind of explanation or comments.
-    """
-    payload = {
-        "inputs": {"prompt": [prompt], "max_tokens": [1000], "temperature": [0.1]}
-    }
-
-    client = EndpointClient(DATABRICKS_URL, DATABRICKS_TOKEN)
-    output = client.query_inference_endpoint(
-        endpoint_name="falcon-7b-instruct-sepideh", data=payload
-    )
-
-    sql_query = (
-        "SELECT"
-        + (
-            output["predictions"]
-            .replace("load_factor", "tickets_sold /  aircraft_capacity")
-            .split(";")[0]
-            + ";"
-        ).split("SELECT")[1]
-    )
-    return sql_query
 
 
 def send_query_to_warehouse(query: str) -> str:

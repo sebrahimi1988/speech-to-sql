@@ -1,227 +1,165 @@
 <!DOCTYPE html>
 <html>
-   <head>
-      <title>Speech to SQL Translation with LLMs</title>
-      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
-      <style>
-         body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
-      </style>
-   </head>
-   <body class="w3-light-grey">
-      <!-- w3-content defines a container for fixed size centered content, 
-         and is wrapped around the whole page content, except for the footer in this example -->
-      <div class="w3-content" style="max-width:1400px">
-         <!-- Header -->
-         <header class="w3-container w3-center w3-padding-32">
-            <h1><b>Speech to SQL Translation with LLMs</b></h1>
-            <p>Ask me anything about <span class="w3-tag">bookings and flights</span></p>
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Databricks_Logo.png/800px-Databricks_Logo.png" alt="Image" class="w3-center w3-margin-right" style="width:100px"> 
-        </header>
-         <div class="w3-row">
-            <div class="w3-col s6 w3-center">
-               <p>
-               <div class="w3-card w3-margin w3-margin-top" style="height:300px">
-                  <div class="w3-container w3-white" style="height:300px">
-                     <h3><b>Step 1</b></h3>
-                     <p>Speak or simply type in your question.</p>
-                     <p>
-                          <button id="startRecording">Start recording</button> 
-                          <button id="stopRecording" disabled>Stop recording</button>
-                        </p>
-                     <div style="height: 100px; width: inherit;border: 1px solid black">
-                     <p><span name="transcription" class="transcription" contenteditable="true" id="transcribed"></span></p>
-                     </div>
-                     <p><button id="confirmText" type="submit">Confirm question</button></p>
-                  </div>
-               </div>
-               </p>
+
+<head>
+    <title>Speech to SQL Translation with LLMs</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    
+    <style>
+        body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
+     </style>
+</head>
+
+<body>
+    <h2 class="pt-3 text-center">Ask me anything about <span class="text-bg-dark">bookings and flights</span></h2>
+    <p class="text-center">Powered by <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Databricks_Logo.png/800px-Databricks_Logo.png" alt="Image" style="width:100px"></p>
+
+    <div class="container bs-secondary-color min-vh-100 h-100">
+        <div class="row" style="height: 30vh;">
+            <div class="col px-5 pt-3 pb-5 m-3 border shadow bg-body-tertiary position-relative">
+                <div class="d-flex flex-column h-100">
+                    <h5>1. Speak or simply type in your question</h5>
+                    <p>
+                        Recording:
+                        <button type="button" class="btn btn-sm btn-success" id="startRecording"><i class="bi bi-record-fill"></i></button>
+                        <button type="button" class="btn btn-sm btn-danger me-2" id="stopRecording"><i class="bi bi-stop-fill"></i></button>
+                        <span class="spinner-border spinner-border-sm invisible" role="status" id="recordSpinner"></span>
+                    </p>
+                    <textarea class="form-control flex-grow-1" id="transcribed"></textarea>
+                </div>
+                <button type="button" class="btn btn-success position-absolute bottom-0 end-0 m-1" id="confirmText">Confirm question</button>
             </div>
-            <div class="w3-col s6 w3-center">
-               <p>
-               <div class="w3-card w3-margin w3-margin-top" style="height:300px">
-                  <div class="w3-container w3-white" style="height:300px">
-                     <h3><b>Step 2</b></h3>
-                     <p>Send your question to the LLM to translate to SQL</p>
-                     <p>
-                        <button id="text2sql">Text to SQL</button>
-                     </p>
-                     <div style="height: 100px; width: inherit;margin-top: 10px;;border: 1px solid black">
-                     <p><span name="correctSQL" class="correctSQL" contenteditable="true" id="sqlQuery"></span></p>
-                     </div>
-                     <p><button id="confirmQuery" type="submit">Confirm query</button></p>
-                  </div>
-               </div>
-               </p>
+            <div class="col px-5 pt-3 pb-5 m-3 border shadow bg-body-tertiary position-relative opacity-25" id="query-box">
+                <div class="d-flex flex-column h-100">
+                    <h5>2. Generate SQL</h5>
+                    <textarea class="form-control flex-grow-1" id="sqlQuery" rows="2"></textarea>
+                </div>
+                <button type="button" class="btn btn-success position-absolute bottom-0 end-0 m-1" id="confirmQuery">Confirm query</button>
             </div>
-         </div>
-         <!-- Grid -->
-         <div class="w3-row">
-            <div class="w4-col l5 s12">
-               <div class="w3-card-4 w3-margin w3-white">
-                  <div class="w3-container">
-                     <h3><b>Result</b></h3>
-                     <p>Querying the SQL warehouse</p>
-                     <p>
-                        <button id="sendQuery">Send query</button>
-                     </p>
-                     <p>
-                        <div style="height: 100px; width: 500px;border: 1px solid black">
-                         <span id="sqlQueryResult"></span>
-                        </div>
-                        </p>
-                  </div>
-               </div>
+        </div>
+        <div class="row" style="height: 30vh;">
+            <div class="col px-5 pt-3 pb-5 m-3 border shadow bg-body-tertiary opacity-25" id="result-box">
+                <div class="d-flex flex-column h-100">
+                    <h5>3. Query results</h5>
+                    <textarea class="form-control flex-grow-1" id="sqlQueryResult" readonly></textarea>
+                </div>
             </div>
-            <hr>
-         </div>
-      </div>
-   </body>
-   <script>
-      navigator
-          .mediaDevices
-          .getUserMedia({audio: true})
-          .then(stream => { handlerFunction(stream) });
-      
-      function handlerFunction(stream) {
-          rec = new MediaRecorder(stream, {mimeType: "audio/webm"});
-          rec.ondataavailable = e => {
-              audioChunks.push(e.data);
-              if (rec.state == "inactive") {
-                  let blob = new Blob(audioChunks, {type: rec.mimeType});
-                  sendData(blob);
-              }
-          }
-      }
-      
-      function sendData(data) {
-          var form = new FormData();
-          form.append('file', data);
-        //   form.append('title', 'data.mp3');
-          //Chrome inspector shows that the post data includes a file and a title.
-          $.ajax({
-              type: 'POST',
-              url: '/save-record',
-              data: form,
-              cache: false,
-              processData: false,
-              contentType: false
-          }).done(function(data) {
-              console.log(data);
-              document.getElementById('transcribed').innerHTML = data;
-          });
-      }
+        </div>
+    </div> 
 
-      function setQuestionText(question_text){
-        var form = new FormData();
-        form.append('question_text', question_text);
-        $.ajax({
-              type: 'POST',
-              url: '/set-question-text',
-              data: form,
-              cache: false,
-              processData: false,
-              contentType: false
-          }).done(function(data) {
-              console.log("Question text set");
-          });
-      }
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
+    <script>
+        navigator
+            .mediaDevices
+            .getUserMedia({ audio: true })
+            .then(stream => { handlerFunction(stream) });
 
-      function setQuestionSQL(question_sql){
-        var form = new FormData();
-        form.append('question_sql', question_sql);
-        $.ajax({
-              type: 'POST',
-              url: '/set-question-sql',
-              data: form,
-              cache: false,
-              processData: false,
-              contentType: false
-          }).done(function(data) {
-              console.log("Question sql set");
-          });
-      }
-      
-      function convertText2SQL(){
-          $.ajax({
-              type: 'POST',
-              url: '/convert-text2sql',
-              //data: form,
-              cache: false,
-              processData: false,
-              contentType: false
-          }).done(function(sqldata) {
-              console.log(sqldata);
-              document.getElementById('sqlQuery').innerHTML = sqldata;
-          });
-      }
-      
-      function sendSQLQuery(){
-          $.ajax({
-              type: 'POST',
-              url: '/send-sql-query',
-              //data: form,
-              cache: false,
-              processData: false,
-              contentType: false
-          }).done(function(sqlresult) {
-              console.log(sqlresult);
-              document.getElementById('sqlQueryResult').innerHTML = sqlresult;
-          });
-      }
-      
-      startRecording.onclick = e => {
-          console.log('Recording are started..');
-          startRecording.disabled = true;
-          stopRecording.disabled = false;
-          text2sql.disabled = true;
-          audioChunks = [];
-          rec.start();
-      };
-      
-      stopRecording.onclick = e => {
-          console.log("Recording are stopped.");
-          startRecording.disabled = false;
-          stopRecording.disabled = true;
-          text2sql.disabled = false;
-          rec.stop();
-      };
-      
-      text2sql.onclick = e => {
-          console.log("Sending text to the LLM.");
-          text2sql.disabled = true;
-          sendQuery.disabled = false;
-          //confirmText.disabled = false;
-          convertText2SQL();
-      };
-      
-      sendQuery.onclick = e => {
-          console.log("Sending query to the warehouse.");
-          sendQuery.disabled = true;
-          confirmQuery.disabled = false;
-          sendSQLQuery();
-      };
+        function handlerFunction(stream) {
+            rec = new MediaRecorder(stream, { mimeType: "audio/webm" });
+            rec.ondataavailable = e => {
+                audioChunks.push(e.data);
+                if (rec.state == "inactive") {
+                    let blob = new Blob(audioChunks, { type: rec.mimeType });
+                    sendData(blob);
+                }
+            }
+        }
 
-      confirmText.onclick = e => {
-          console.log("Confirmed text");
-          //confirmText.disabled = true;
-          text2sql.disabled = false;
-          var question_text = $('span.transcription').text();
-          console.log(question_text)
-          setQuestionText(question_text);
-      };
+        function sendData(data) {
+            var form = new FormData();
+            form.append('file', data);
+            //Chrome inspector shows that the post data includes a file and a title.
+            $.ajax({
+                type: 'POST',
+                url: '/save-record',
+                data: form,
+                cache: false,
+                processData: false,
+                contentType: false
+            }).done(function (data) {
+                console.log(data);
+                document.getElementById('transcribed').innerHTML = data;
+                document.getElementById("recordSpinner").classList.add("invisible");
+            });
+        }
 
-      confirmQuery.onclick = e => {
-          console.log("Confirmed query");
-          //confirmQuery.disabled = true;
-          sendQuery.disabled = false;
-          var question_sql = $('span.correctSQL').text();
-          console.log(question_sql)
-          setQuestionSQL(question_sql);
-      };
-      
-   </script>
+        function convertText2SQL(question_text) {
+            var form = new FormData();
+            form.append('question_text', question_text);
+            $.ajax({
+                type: 'POST',
+                url: '/convert-text2sql',
+                data: form,
+                cache: false,
+                processData: false,
+                contentType: false
+            }).done(function (sqldata) {
+                console.log(sqldata);
+                document.getElementById('sqlQuery').value = sqldata;
+            });
+        }
+
+        function sendSQLQuery(question_sql) {
+            var form = new FormData();
+            form.append('question_sql', question_sql);
+            console.log('Start sendSQLQuery');
+            $.ajax({
+                type: 'POST',
+                url: '/send-sql-query',
+                data: form,
+                cache: false,
+                processData: false,
+                contentType: false
+            }).done(function (sqlresult) {
+                console.log(sqlresult);
+                document.getElementById('sqlQueryResult').value = sqlresult;
+            });
+        }
+
+        startRecording.onclick = e => {
+            console.log('Recording are started..');
+            document.getElementById("recordSpinner").classList.add("invisible");
+            startRecording.disabled = true;
+            stopRecording.disabled = false;
+            audioChunks = [];
+            rec.start();
+        };
+
+        stopRecording.onclick = e => {
+            console.log("Recording are stopped.");
+            startRecording.disabled = false;
+            stopRecording.disabled = true;
+            rec.stop();
+            document.getElementById("recordSpinner").classList.remove("invisible");
+        };
+
+
+        confirmText.onclick = e => {
+            console.log("Confirmed text");
+            document.getElementById("query-box").classList.remove("opacity-25");
+            var question_text = $('#transcribed').val();
+            console.log(question_text)
+            // setQuestionText(question_text);
+            console.log("Sending text to the LLM.");
+            convertText2SQL(question_text);
+        };
+
+        confirmQuery.onclick = e => {
+            console.log("Confirmed query");
+            document.getElementById("result-box").classList.remove("opacity-25");
+            var question_sql = $('#sqlQuery').val();
+            console.log(question_sql)
+            // setQuestionSQL(question_sql);
+            console.log("Sending query to the warehouse.");
+            confirmQuery.disabled = false;
+            sendSQLQuery(question_sql);
+        };
+
+    </script>
+</body>
+
 </html>
