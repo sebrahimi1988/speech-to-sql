@@ -10,8 +10,11 @@ This is a high level architecture of the solution:
 
 You need to run the following notebooks to register the whisper and llama2 models to the model registry:
 
-TODO: notebooks
-TODO: How to create endpoints
+[00_register_model_whisper](https://github.com/sebrahimi1988/speech-to-sql/blob/main/notebooks/speech2text/00_register_model_whisper.py
+[00_register_model_llama2](https://github.com/sebrahimi1988/speech-to-sql/blob/main/notebooks/text2sql/Llama2/00_register_model_llama2.py)
+
+
+Once the models are registered, create GPU serving endpoints using Databricks UI/API.
 
 ### Set up environmental variable.
 Under the app folder, create a .env file with the following content:
