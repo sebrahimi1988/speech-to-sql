@@ -10,7 +10,7 @@ This is a high level architecture of the solution:
 
 You need to run the following notebooks to register the whisper and llama2 models to the model registry:
 
-[00_register_model_whisper](https://github.com/sebrahimi1988/speech-to-sql/blob/main/notebooks/speech2text/00_register_model_whisper.py
+[00_register_model_whisper](https://github.com/sebrahimi1988/speech-to-sql/blob/main/notebooks/speech2text/00_register_model_whisper.py)
 [00_register_model_llama2](https://github.com/sebrahimi1988/speech-to-sql/blob/main/notebooks/text2sql/Llama2/00_register_model_llama2.py)
 
 
