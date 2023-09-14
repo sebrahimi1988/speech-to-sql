@@ -95,20 +95,25 @@ def convert_text2sql():
     Table name: databricks_llm_pov.trading.bookings_with_flights
 
     Table description:
-
-    - flight_id (string) 
-    - booking_id (string) 
-    - booking_date (date): The date when the booking was made.
-    - load_factor (float)
-    - number_of_passengers (int)
-    - days_prior_to_departure (int)
-    - departure_datetime (timestamp): The date and time when the flight is scheduled to depart.
-    - arrival_datetime (timestamp): The date and time when the flight is scheduled to arrive.
-    - aircraft_capacity (int) 
-    - total_ticket_available (int)
-    - tickets_sold (int)
-    - flight_route (string)
-  """
+    - flight_id	
+    - booking_id	
+    - booking_date	
+    - number_of_passengers	
+    - days_prior_to_departure	
+    - trip_starting_date	
+    - trip_ending_date	
+    - departure_airport	
+    - currency_of_purchase	
+    - ticket_revenue	
+    - departure_datetime	
+    - arrival_datetime	
+    - aircraft_capacity	
+    - total_tickets_issued	
+    - tickets_sold	
+    - flight_route	
+    - departure_airport_code	
+    - arrival_airport_code
+    """
 
     prompt = f"""
     You are a SQL expert. Given this table information:
@@ -118,7 +123,7 @@ def convert_text2sql():
 
     Return the resulting SQL query, without including any kind of explanation or comments.
     """
-    payload = pd.DataFrame({"prompt": [prompt], "max_tokens": [80]})
+    payload = pd.DataFrame({"prompt": [prompt], "max_tokens": [80], "temperature": [0.2]})
     sql_query = query_endpoint(payload, ep_name=TEXT2SQL_MODEL)
     return sql_query
 

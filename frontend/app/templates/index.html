@@ -35,7 +35,10 @@
             </div>
             <div class="col px-5 pt-3 pb-5 m-3 border shadow bg-body-tertiary position-relative opacity-25" id="query-box">
                 <div class="d-flex flex-column h-100">
-                    <h5>2. Generate SQL</h5>
+                    <p>
+                        <h5>2. Generate SQL</h5>
+                        <span class="spinner-border spinner-border-sm invisible" role="status" id="sqlSpinner"></span>
+                    </p> 
                     <textarea class="form-control flex-grow-1" id="sqlQuery" rows="2"></textarea>
                 </div>
                 <button type="button" class="btn btn-success position-absolute bottom-0 end-0 m-1" id="confirmQuery">Confirm query</button>
@@ -83,6 +86,7 @@
             }).done(function (data) {
                 console.log(data);
                 document.getElementById('transcribed').innerHTML = data;
+                document.getElementById('transcribed').style.color="#000000"; 
                 document.getElementById("recordSpinner").classList.add("invisible");
             });
         }
@@ -100,13 +104,14 @@
             }).done(function (sqldata) {
                 console.log(sqldata);
                 document.getElementById('sqlQuery').value = sqldata;
+                document.getElementById('sqlQuery').style.color="#000000"; 
+                document.getElementById("sqlSpinner").classList.add("invisible");
             });
         }
 
         function sendSQLQuery(question_sql) {
             var form = new FormData();
             form.append('question_sql', question_sql);
-            console.log('Start sendSQLQuery');
             $.ajax({
                 type: 'POST',
                 url: '/send-sql-query',
@@ -117,12 +122,17 @@
             }).done(function (sqlresult) {
                 console.log(sqlresult);
                 document.getElementById('sqlQueryResult').value = sqlresult;
+                document.getElementById('sqlQueryResult').style.color="#000000"; 
             });
         }
 
         startRecording.onclick = e => {
             console.log('Recording are started..');
             document.getElementById("recordSpinner").classList.add("invisible");
+            document.getElementById("sqlSpinner").classList.add("invisible");
+            document.getElementById("transcribed").style.color="#ffffff";
+            document.getElementById("sqlQuery").style.color="#ffffff";
+            document.getElementById("sqlQueryResult").style.color="#ffffff";
             startRecording.disabled = true;
             stopRecording.disabled = false;
             audioChunks = [];
@@ -141,11 +151,11 @@
         confirmText.onclick = e => {
             console.log("Confirmed text");
             document.getElementById("query-box").classList.remove("opacity-25");
+            document.getElementById("sqlSpinner").classList.remove("invisible");
             var question_text = $('#transcribed').val();
             console.log(question_text)
-            // setQuestionText(question_text);
             console.log("Sending text to the LLM.");
-            convertText2SQL(question_text);
+            convertText2SQL(question_text);      
         };
 
         confirmQuery.onclick = e => {
@@ -153,7 +163,6 @@
             document.getElementById("result-box").classList.remove("opacity-25");
             var question_sql = $('#sqlQuery').val();
             console.log(question_sql)
-            // setQuestionSQL(question_sql);
             console.log("Sending query to the warehouse.");
             confirmQuery.disabled = false;
             sendSQLQuery(question_sql);
